@@ -43,7 +43,7 @@ M._on_exit_to_buffer = function(_, exit_code, _)
     color = '\x1b[31m'
   end
   M._baleia.buf_set_lines(M._output_buf, lastline, -1, false,
-    { color .. 'Finish with exit code: ' .. exit_code .. '\x1b[0m' })
+    { color .. 'Finished with exit code: ' .. exit_code .. '\x1b[0m' })
 end
 
 M._append_to_buffer = function(_, data)
@@ -58,7 +58,7 @@ M._open_new_or_reuse_window = function()
   if M._output_buf and vim.api.nvim_buf_is_valid(M._output_buf) then return end
   if M._output_win and vim.api.nvim_win_is_valid(M._output_win) then return end
 
-  M._output_buf = vim.api.nvim_create_buf(true, false)
+  M._output_buf = vim.api.nvim_create_buf(true, true)
   if M._output_buf == 0 then
     vim.notify("Failed to open new bufdow ", vim.log.levels.ERROR)
     return
