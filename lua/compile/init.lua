@@ -9,7 +9,7 @@ M.setup = function(opts)
   M.opts = opts
 
   vim.api.nvim_create_user_command("Compile", M.compile, {})
-  vim.api.nvim_create_user_command("CompileSetCmd", M.compile, {})
+  vim.api.nvim_create_user_command("CompileSetCmd", M.set_cmd, {})
   M._baleia = require('baleia').setup({})
 end
 
@@ -76,7 +76,7 @@ M._filter_output = function(data)
   for _, line in ipairs(data) do
     if line ~= "" then
       line = line:gsub("\r", "")
-      -- line = line:gsub("^[", "\x1b")
+      line = line:gsub("\x1b%[K", "")
       table.insert(clean, line)
     end
   end
