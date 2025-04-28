@@ -32,7 +32,10 @@ M.compile = function()
 end
 
 M.set_cmd = function()
-  M._cmd = vim.fn.input("Compile cmd: ")
+  vim.ui.input({prompt="Compile cmd: ", completion="shellcmd"},
+    function(input)
+      M._cmd = input
+    end)
 end
 
 M._on_exit_to_buffer = function(_, exit_code, _)
