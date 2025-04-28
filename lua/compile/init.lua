@@ -58,8 +58,11 @@ M._append_to_buffer = function(_, data)
 end
 
 M._open_new_or_reuse_window = function()
-  if M._output_buf and vim.api.nvim_buf_is_valid(M._output_buf) then return end
-  if M._output_win and vim.api.nvim_win_is_valid(M._output_win) then return end
+  local is_win_valid = M._output_win and vim.api.nvim_win_is_valid(M._output_win)
+  local is_buf_valid = M._output_buf and vim.api.nvim_buf_is_valid(M._output_buf)
+  if is_win_valid and is_buf_valid then
+    return
+  end
 
   M._output_buf = vim.api.nvim_create_buf(true, true)
   if M._output_buf == 0 then
