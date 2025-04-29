@@ -1,8 +1,8 @@
 local M = {}
 
-M._output_buf = nil
-M._output_win = nil
+M._buf = nil
 M._cmd = nil
+M._job_id = nil
 
 M.setup = function(opts)
   opts = opts or {}
@@ -10,21 +10,22 @@ M.setup = function(opts)
 
   vim.api.nvim_create_user_command("Compile", M.compile, {})
   vim.api.nvim_create_user_command("CompileSetCmd", M.set_cmd, {})
-  M._baleia = require('baleia').setup({})
+  vim.api.nvim_create_user_command("CompileStop", M.stop, {})
+  M._baleia = require("baleia").setup({})
 end
 
 M.compile = function()
   if not M._cmd then
     M.set_cmd()
   end
-  if M._cmd == nil then
+  if not M._cmd then
     return
   end
 
   M._open_new_or_reuse_window()
 
-  M._baleia.buf_set_lines(M._output_buf, 0, -1, false, { '\x1b[32mCompile \x1b[0m' .. M._cmd .. ':' })
-  vim.fn.jobstart(M._cmd, {
+  M._baleia.buf_set_lines(M._buf, 0, -1, false, { '\x1b[32mCompile \x1b[0m' .. M._cmd .. ':' })
+  M._job_id = vim.fn.jobstart(M._cmd, {
     pty = true,
     on_stdout = M._append_to_buffer,
     on_exit = M._on_exit_to_buffer,
@@ -32,48 +33,58 @@ M.compile = function()
 end
 
 M.set_cmd = function()
-  vim.ui.input({prompt="Compile cmd: ", completion="shellcmd"},
+  vim.ui.input({ prompt = "Compile cmd: ", completion = "shellcmd" },
     function(input)
       M._cmd = input
     end)
 end
 
+M.stop = function()
+  if M._job_id == nil then
+    vim.notify("None job is runnig (job id is nil)", vim.log.levels.INFO)
+    return
+  end
+
+  vim.fn.jobstop(M._job_id)
+end
+
 M._on_exit_to_buffer = function(_, exit_code, _)
-  local lastline = vim.api.nvim_buf_line_count(M._output_buf) -- colors dosn't work with -1
+  local lastline = vim.api.nvim_buf_line_count(M._buf) -- colors dosn't work with -1
+  local color = ''
   if exit_code == 0 then
     color = '\x1b[32m'
   else
     color = '\x1b[31m'
   end
-  M._baleia.buf_set_lines(M._output_buf, lastline, -1, false,
+  M._baleia.buf_set_lines(M._buf, lastline, -1, false,
     { color .. 'Finished with exit code: ' .. exit_code .. '\x1b[0m' })
+  M._job_id = nil
 end
 
 M._append_to_buffer = function(_, data)
   if data then
     data = M._filter_output(data)
-    local lastline = vim.api.nvim_buf_line_count(M._output_buf) -- colors dosn't work with -1
-    M._baleia.buf_set_lines(M._output_buf, lastline, -1, false, data)
+    local lastline = vim.api.nvim_buf_line_count(M._buf) -- colors dosn't work with -1
+    M._baleia.buf_set_lines(M._buf, lastline, -1, false, data)
   end
 end
 
 M._open_new_or_reuse_window = function()
-  local is_win_valid = M._output_win and vim.api.nvim_win_is_valid(M._output_win)
-  local is_buf_valid = M._output_buf and vim.api.nvim_buf_is_valid(M._output_buf)
-  if is_win_valid and is_buf_valid then
-    return
+  -- create new buffer if invalid
+  local is_buf_valid = M._buf and vim.api.nvim_buf_is_valid(M._buf)
+  if not is_buf_valid then
+    M._buf = vim.api.nvim_create_buf(true, true)
+    if M._buf == 0 then
+      vim.notify("Failed to open new bufdow ", vim.log.levels.ERROR)
+    end
   end
 
-  M._output_buf = vim.api.nvim_create_buf(true, true)
-  if M._output_buf == 0 then
-    vim.notify("Failed to open new bufdow ", vim.log.levels.ERROR)
-    return
-  end
-
-  M._output_win = vim.api.nvim_open_win(M._output_buf, false, { split = "below" })
-  if M._output_win == 0 then
-    vim.notify("Failed to open new window ", vim.log.levels.ERROR)
-    return
+  --  show window if hidden
+  if vim.fn.getbufinfo(M._buf)[1].hidden == 1 then
+    local output_win = vim.api.nvim_open_win(M._buf, false, { split = "below" })
+    if output_win == 0 then
+      vim.notify("Failed to open new window ", vim.log.levels.ERROR)
+    end
   end
 end
 
