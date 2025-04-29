@@ -1,6 +1,7 @@
 local M = {}
 
 M._buf = nil
+M._win = nil
 M._cmd = nil
 M._job_id = nil
 
@@ -66,6 +67,7 @@ M._append_to_buffer = function(_, data)
     data = M._filter_output(data)
     local lastline = vim.api.nvim_buf_line_count(M._buf) -- colors dosn't work with -1
     M._baleia.buf_set_lines(M._buf, lastline, -1, false, data)
+    vim.api.nvim_win_set_cursor(M._win, {lastline, 1})
   end
 end
 
@@ -81,8 +83,8 @@ M._open_new_or_reuse_window = function()
 
   --  show window if hidden
   if vim.fn.getbufinfo(M._buf)[1].hidden == 1 then
-    local output_win = vim.api.nvim_open_win(M._buf, false, { split = "below" })
-    if output_win == 0 then
+    M._win = vim.api.nvim_open_win(M._buf, false, { split = "below" })
+    if M._win == 0 then
       vim.notify("Failed to open new window ", vim.log.levels.ERROR)
     end
   end
