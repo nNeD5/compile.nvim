@@ -2,7 +2,7 @@
 
 Compile command inside neovim and see output in buffer.
 
-[!](file:assets/demo.mp4)
+https://github.com/user-attachments/assets/406ac815-c319-4d43-95bf-776633e42b1b
 
 ---
 
