@@ -2,6 +2,8 @@
 
 Compile command inside neovim and see output in buffer.
 
+[](file:assets/demo.mp4)
+
 ---
 
 # Features
