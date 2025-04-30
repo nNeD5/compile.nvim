@@ -2,7 +2,7 @@
 
 Compile command inside neovim and see output in buffer.
 
-[](file:assets/demo.mp4)
+[!](file:assets/demo.mp4)
 
 ---
 
@@ -45,7 +45,7 @@ Compile command inside neovim and see output in buffer.
 :CompileSetCmd  " change compilation command
 :CompileStop    " stop current job
 ```
-- or use key binds `<leader>r` `<leader>R` `<C-c>` from [Setup](#setup) section
+- or use key binds `<leader>r` `<leader>R` `<C-c>` from [Installation](#installation) section
 
 # Setup
 
