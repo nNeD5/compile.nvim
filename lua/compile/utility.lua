@@ -76,8 +76,9 @@ M.append_to_buffer = function(buf, win)
       data = filter_output(data)
       local lastline = vim.api.nvim_buf_line_count(buf) -- colors dosn't work with -1
       vim.api.nvim_buf_set_lines(buf, lastline, -1, false, data)
-      return
-          vim.api.nvim_win_set_cursor(win, { lastline, 1 })
+      if vim.api.nvim_win_is_valid(win) then
+        vim.api.nvim_win_set_cursor(win, { lastline, 1 })
+      end
     end
   end
 end
