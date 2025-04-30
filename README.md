@@ -11,7 +11,8 @@ https://github.com/user-attachments/assets/406ac815-c319-4d43-95bf-776633e42b1b
 - async: you can use your editor while command is running. You can even use `watch` commands.
 - auto-scroll: scroll your compile buffer to bottom as command output
 - colors with [baleia.nvim](https://github.com/m00qek/baleia.nvim)
-- changed behavior of gf, gF key binds: they will not open file inside compilation window, instead in previous(`<C-w>p`) one
+- changed behavior of gf, gF key binds: they will not open file inside compilation window,
+  instead in previous (`<C-w>p`) one
 
 # Installation
 
