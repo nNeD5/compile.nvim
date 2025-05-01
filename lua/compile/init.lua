@@ -25,10 +25,11 @@ M.compile = function()
 
   M._buf, M._win = M._utility.open_new_or_reuse_window(M._buf, M._win)
 
+  M.stop()
+
   local lastline = vim.api.nvim_buf_line_count(M._buf)
   vim.api.nvim_buf_set_lines(M._buf, 0, -1, false, {})
-  vim.api.nvim_buf_set_lines(M._buf, 1, 2, false, { '\x1b[32mCompile \27[0m' .. M._cmd .. ':' })
-  M.stop()
+  vim.api.nvim_buf_set_lines(M._buf, 0, 0, false, { '\x1b[32mCompile \27[0m' .. M._cmd .. ':' })
   M._job_id = vim.fn.jobstart(M._cmd, {
     pty = true,
     on_stdout = M._utility.append_to_buffer(M._buf, M._win),
