@@ -2,7 +2,7 @@
 
 Compile command inside neovim and see output in buffer.
 
-https://github.com/user-attachments/assets/406ac815-c319-4d43-95bf-776633e42b1b
+https://github.com/user-attachments/assets/1a0df355-88ec-4404-8ea3-39d8640a87fe
 
 ---
 
@@ -35,6 +35,7 @@ https://github.com/user-attachments/assets/406ac815-c319-4d43-95bf-776633e42b1b
 # Usage
 
 - lua
+
 ```lua
 :lua require("compile").compile()   -- start compilation command (ask to set command if none)
 :lua require("compile").set_cmd()   -- change compilation command
