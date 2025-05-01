@@ -25,7 +25,9 @@ M.compile = function()
 
   M._buf, M._win = M._utility.open_new_or_reuse_window(M._buf, M._win)
 
-  M.stop()
+  if M._job_id then
+    M.stop()
+  end
 
   local lastline = vim.api.nvim_buf_line_count(M._buf)
   vim.api.nvim_buf_set_lines(M._buf, 0, -1, false, {})
