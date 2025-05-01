@@ -96,7 +96,9 @@ M.on_exit_to_buffer = function(buf, win)
       { color .. 'Finished with exit code: ' .. exit_code .. '\x1b[0m' })
     M._job_id = nil
     vim.notify('Finished with exit code: ' .. exit_code, vim.log.levels.INFO)
-    vim.api.nvim_win_set_cursor(win, { lastline, 1 })
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_set_cursor(win, { lastline, 1 })
+    end
   end
 end
 
