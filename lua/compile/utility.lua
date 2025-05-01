@@ -83,7 +83,7 @@ M.append_to_buffer = function(buf, win)
   end
 end
 
-M.on_exit_to_buffer = function(buf)
+M.on_exit_to_buffer = function(buf, win)
   return function(_, exit_code, _)
     local lastline = vim.api.nvim_buf_line_count(buf) -- colors dosn't work with -1
     local color = ''
@@ -96,6 +96,7 @@ M.on_exit_to_buffer = function(buf)
       { color .. 'Finished with exit code: ' .. exit_code .. '\x1b[0m' })
     M._job_id = nil
     vim.notify('Finished with exit code: ' .. exit_code, vim.log.levels.INFO)
+    vim.api.nvim_win_set_cursor(win, { lastline, 1 })
   end
 end
 
