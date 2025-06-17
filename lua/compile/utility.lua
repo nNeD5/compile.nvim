@@ -44,11 +44,33 @@ local function edit_under_cursor_with_col()
   vim.cmd.normal { 'zz', bang = true }
 end
 
-M.open_new_or_reuse_window = function(buf, win)
+local bufname_exists = function(name)
+  for _, buf_id in ipairs(vim.api.nvim_list_bufs()) do
+    local buf_name = vim.api.nvim_buf_get_name(buf_id)
+    if vim.fn.fnamemodify(buf_name, ":p") == vim.fn.fnamemodify(name, ":p") then
+      return true
+    end
+  end
+  return false
+end
+
+M.open_new_or_reuse_window = function(buf, win, opts, cmd)
   -- create new buffer if invalid
   local is_buf_valid = buf and vim.api.nvim_buf_is_valid(buf)
   if not is_buf_valid then
     buf = vim.api.nvim_create_buf(true, true)
+
+    local buf_name = '[' .. cmd .. ']'
+    local buf_name_duplicate_number = 1
+    local new_buf_name = buf_name
+    while bufname_exists(new_buf_name) or vim.uv.fs_stat(new_buf_name) ~= nil do
+      new_buf_name = buf_name_duplicate_number .. buf_name
+      buf_name_duplicate_number = buf_name_duplicate_number + 1
+      print(buf_name_duplicate_number)
+    end
+    buf_name = new_buf_name
+
+    vim.api.nvim_buf_set_name(buf, buf_name)
     baleia.automatically(buf)
     vim.keymap.set({ "n", "n" }, "gf", edit_under_cursor, { buffer = buf })
     vim.keymap.set({ "n", "n" }, "gF", edit_under_cursor_with_col, { buffer = buf })
