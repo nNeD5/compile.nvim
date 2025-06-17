@@ -60,7 +60,9 @@ M.open_new_or_reuse_window = function(buf, win)
 
   --  show window if hidden
   if vim.fn.getbufinfo(buf)[1].hidden == 1 then
-    win = vim.api.nvim_open_win(buf, false, { split = "below" })
+    local curr_win_height = vim.api.nvim_win_get_height(0)
+    local height = math.floor(curr_win_height * opts.height)
+    win = vim.api.nvim_open_win(buf, false, { split = "below", height = height })
     if win == 0 then
       vim.notify("Failed to open new window ", vim.log.levels.ERROR)
       win = nil
