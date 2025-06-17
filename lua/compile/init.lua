@@ -42,6 +42,11 @@ M.set_cmd = function()
   vim.ui.input({ prompt = "Compile cmd: ", completion = "shellcmd" },
     function(input)
       M._cmd = input
+      -- change previous buffer name if exists
+      if M._buf ~= nil then
+        local buf_name = M._utility.generate_buf_name(M._cmd)
+        vim.api.nvim_buf_set_name(M._buf, buf_name)
+      end
     end)
 end
 

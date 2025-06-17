@@ -54,12 +54,7 @@ local bufname_exists = function(name)
   return false
 end
 
-M.open_new_or_reuse_window = function(buf, win, opts, cmd)
-  -- create new buffer if invalid
-  local is_buf_valid = buf and vim.api.nvim_buf_is_valid(buf)
-  if not is_buf_valid then
-    buf = vim.api.nvim_create_buf(true, true)
-
+M.generate_buf_name = function (cmd)
     local buf_name = '[' .. cmd .. ']'
     local buf_name_duplicate_number = 1
     local new_buf_name = buf_name
@@ -68,8 +63,16 @@ M.open_new_or_reuse_window = function(buf, win, opts, cmd)
       buf_name_duplicate_number = buf_name_duplicate_number + 1
       print(buf_name_duplicate_number)
     end
-    buf_name = new_buf_name
+    return new_buf_name
+end
 
+M.open_new_or_reuse_window = function(buf, win, opts, cmd)
+  -- create new buffer if invalid
+  local is_buf_valid = buf and vim.api.nvim_buf_is_valid(buf)
+  if not is_buf_valid then
+    buf = vim.api.nvim_create_buf(true, true)
+
+    local buf_name = M.generate_buf_name(cmd)
     vim.api.nvim_buf_set_name(buf, buf_name)
     baleia.automatically(buf)
     vim.keymap.set({ "n", "n" }, "gf", edit_under_cursor, { buffer = buf })
