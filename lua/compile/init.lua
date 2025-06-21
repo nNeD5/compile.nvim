@@ -1,61 +1,11 @@
 local M = {}
+local compile = require("compile.compile")
+local window = require("compile.window")
 
-M._buf = nil
-M._win = nil
-M._cmd = nil
-M._job_id = nil
+function M.setup(opts) end
 
-M.setup = function(opts)
-  opts = opts or { height=0.5 }
-  M.opts = opts
+function M.run_cmd() compile.run_cmd() end
+function M.toggle_window() window.toggle_window() end
 
-  vim.api.nvim_create_user_command("Compile", M.compile, {})
-  vim.api.nvim_create_user_command("CompileSetCmd", M.set_cmd, {})
-  vim.api.nvim_create_user_command("CompileStop", M.stop, {})
-  M._utility = require("compile.utility")
-end
-
-M.compile = function()
-  if not M._cmd then
-    M.set_cmd()
-  end
-  if not M._cmd then
-    return
-  end
-
-  M._buf, M._win = M._utility.open_new_or_reuse_window(M._buf, M._win, M.opts, M._cmd)
-
-  if M._job_id then
-    M.stop()
-  end
-
-  vim.api.nvim_buf_set_lines(M._buf, 0, -1, false, {})
-  vim.api.nvim_buf_set_lines(M._buf, 0, 0, false, { '\x1b[32mCompile \27[0m' .. M._cmd .. ':' })
-  M._job_id = vim.fn.jobstart(M._cmd, {
-    pty = true,
-    on_stdout = M._utility.append_to_buffer(M._buf, M._win),
-    on_exit = M._utility.on_exit_to_buffer(M._buf, M._win),
-  })
-end
-
-M.set_cmd = function()
-  vim.ui.input({ prompt = "Compile cmd: ", completion = "shellcmd" },
-    function(input)
-      M._cmd = input
-      -- change previous buffer name if exists
-      if M._buf ~= nil then
-        local buf_name = M._utility.generate_buf_name(M._cmd)
-        vim.api.nvim_buf_set_name(M._buf, buf_name)
-      end
-    end)
-end
-
-M.stop = function()
-  if M._job_id == nil then
-    vim.notify("None job is runnig (job id is nil)", vim.log.levels.INFO)
-    return
-  end
-  vim.fn.jobstop(M._job_id)
-end
 
 return M
