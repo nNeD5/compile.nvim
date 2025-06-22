@@ -2,6 +2,7 @@ local M = {}
 
 local buffer = require("compile.buffer")
 local window = require("compile.window")
+local job_id = nil;
 
 --- Parse first line in format 'run: <cmd>' from buf and return cmd
 --- @param buf integer
@@ -65,11 +66,20 @@ function M.run_cmd()
   cmd = cmd_from_buf()
   vim.api.nvim_buf_set_lines(buffer.get_buffer(), 0, -1, false, {})
   vim.api.nvim_buf_set_lines(buffer.get_buffer(), 0, 0, false, { '\x1b[32mrun: \27[0m' .. cmd })
-  local job_id = vim.fn.jobstart(cmd, {
+  job_id = vim.fn.jobstart(cmd, {
     pty = true,
     on_stdout = append_to_buffer(M._buf, M._win),
     on_exit = on_exit_to_buffer(M._buf, M._win),
   })
 end
+
+function M.stop_cmd()
+  if job_id == nil then
+    vim.notify("No commands is running", vim.log.levels.WARN)
+    return
+  end
+  vim.fn.jobstop(job_id)
+end
+
 
 return M

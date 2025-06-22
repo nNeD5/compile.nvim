@@ -20,7 +20,7 @@ function M.toggle_window()
   local buf = buffer.get_buffer()
   local buf_info = vim.fn.getbufinfo(buf)[1]
   if buf_info.hidden == 1 then
-    vim.api.nvim_open_win(buf, false, {split ='below'})
+    vim.api.nvim_open_win(buf, true, {split ='below'})
   else
     for _, win in ipairs(buf_info.windows) do
       vim.api.nvim_win_close(win, false)
