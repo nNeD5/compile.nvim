@@ -43,7 +43,7 @@ end
 --- Give `compile` buffer, create new if nil
 --- @return (integer | nil)
 function M.get_buffer()
-  local is_buf_valid = buf and vim.api.nvim_buf_is_valid(buf)
+  local is_buf_valid = buf and vim.api.nvim_buf_is_loaded(buf)
   if not is_buf_valid then
     create_buffer()
   end
