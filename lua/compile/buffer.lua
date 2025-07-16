@@ -29,9 +29,14 @@ local function create_buffer()
   -- create new buffer if invalid
   buf = vim.api.nvim_create_buf(true, true)
   local buf_name = generate_buf_name()
-  vim.api.nvim_buf_set_name(buf, buf_name)
-  vim.api.nvim_buf_set_lines(buf, 0, 1, true, {"run: "})
+
   baleia.automatically(buf)
+
+  vim.api.nvim_buf_set_name(buf, buf_name)
+  vim.api.nvim_set_option_value("filetype", M.get_filetype(), {buf=buf})
+
+  vim.api.nvim_buf_set_lines(buf, 0, 0, true, { '\x1b[32mrun: \27[0m' })
+
   -- vim.keymap.set({ "n", "n" }, "gf", edit_under_cursor, { buffer = buf })
   -- vim.keymap.set({ "n", "n" }, "gF", edit_under_cursor_with_col, { buffer = buf })
   if buf == 0 then
@@ -48,6 +53,10 @@ function M.get_buffer()
     create_buffer()
   end
   return buf
+end
+
+function M.get_filetype()
+  return "compile"
 end
 
 return M

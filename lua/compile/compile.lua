@@ -12,6 +12,8 @@ local function cmd_from_buf()
   local cmd = lines[1]
   local cmd = cmd:match(":(.*)")
   local cmd = cmd:match("^%s*(.-)%s*$") -- trim trailing whitepsaces
+
+  if #cmd == 0 then return nil end
   return cmd
 end
 
@@ -64,6 +66,10 @@ end
 function M.run_cmd()
   window.open_window()
   cmd = cmd_from_buf()
+  if cmd == nil then
+    vim.notify("Command isn't set", vim.log.levels.WARN)
+    return
+  end
   vim.api.nvim_buf_set_lines(buffer.get_buffer(), 0, -1, false, {})
   vim.api.nvim_buf_set_lines(buffer.get_buffer(), 0, 0, false, { '\x1b[32mrun: \27[0m' .. cmd })
   job_id = vim.fn.jobstart(cmd, {
