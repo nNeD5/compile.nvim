@@ -1,5 +1,7 @@
 local M = {}
 
+local command_history = require("compile.command_history")
+
 local buf = nil
 local baleia = require("baleia").setup({})
 
@@ -35,7 +37,12 @@ local function create_buffer()
   vim.api.nvim_buf_set_name(buf, buf_name)
   vim.api.nvim_set_option_value("filetype", M.get_filetype(), {buf=buf})
 
-  vim.api.nvim_buf_set_lines(buf, 0, 0, true, { '\x1b[32mrun: \27[0m' })
+  last_cmd = command_history.get_last_cmd()
+  if last_cmd == nil then
+    baleia.buf_set_lines(buf, 0, 0, true, { '\x1b[32mrun: \x1b[0m' })
+  else
+    baleia.buf_set_lines(buf, 0, 0, true, { '\x1b[32mrun: \x1b[0m' .. last_cmd })
+  end
 
   -- vim.keymap.set({ "n", "n" }, "gf", edit_under_cursor, { buffer = buf })
   -- vim.keymap.set({ "n", "n" }, "gF", edit_under_cursor_with_col, { buffer = buf })
