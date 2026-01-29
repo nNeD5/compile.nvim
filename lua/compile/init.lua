@@ -1,3 +1,5 @@
+-- TODO: error is something runnig and set_curosr called, but window was hidden
+-- TODO: way to "disown" running process
 local M = {}
 
 local compile = require("compile.compile")
