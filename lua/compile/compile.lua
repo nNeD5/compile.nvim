@@ -1,10 +1,5 @@
 local M =  {}
 
-
--- TODO: remove plenary
-local Path = require("plenary.path")
-local data_path = Path:new(vim.fn.stdpath("data"), "compile.nvim")
-
 local compbufid  = nil
 local compwin_id = nil
 local cmdbuf_id  = nil
@@ -14,57 +9,50 @@ local jobid = nil
 -- ==================
 -- HISTORY
 -- ==================
-local function fullpath()
-  -- local cwd = Path:new(vim.fn.getcwd())
-  -- local h = vim.fn.sha256(cwd.filename)
-  local path = Path:new(data_path:joinpath("history" .. ".txt"))
-  if not path:exists() then
-    path:touch({parents = true})
+function fullpath()
+  local data_path = vim.fn.stdpath("data")
+  local path = data_path .. "/compile.nvim/history.txt"
+
+  if vim.fn.filereadable(path) == 0 then
+    vim.notify("Failed to read file: " .. path, vim.log.levels.ERROR)
+    return nil
   end
   return path
 end
 
 local function get_history()
   local path = fullpath()
-  local lines = {}
+  local data = vim.fn.readfile(path)
 
-  local data = path:read()
-  local i = 1
   -- only non empty lines
-  for s in data:gmatch("[^\r\n]+") do
-    lines[i] = s
+  local lines = {}
+  local i = 1
+  for _, s in pairs(data) do
+    s = s:match("^%s*(.-)%s*$") -- trim trailing whitepsaces
+    if #s ~= 0 then lines[i] = s end
     i = i + 1
   end
   return lines
 end
 
+-- TODO: remove same command, before saving
 local function save_command(cmd)
   if cmd == nil then return end
 
   local lines = get_history()
-  if lines ~= nil and lines[#lines] ~= cmd then
-    local path = fullpath()
-    path:write(cmd .. '\n', "a")
+  if lines == nil or lines[#lines] == cmd then
+    return
   end
+
+  local path = fullpath()
+  vim.fn.writefile({cmd .. '\n'}, path, "a")
 end
 
 local function get_last_cmd()
-  -- TODO: something strange, should be just get_history().last
-  -- get cmd from input buffer
-  local lines = {}
-  if cmdbuf_id == nil or not vim.api.nvim_buf_is_loaded(cmdbuf_id) then
-    lines = get_history()
-  else
-    lines = vim.api.nvim_buf_get_lines(cmdbuf_id, 0, -1, false)
-  end
-  local cmd = lines[#lines]
+  lines = get_history()
+  cmd = lines[#lines]
   if cmd == nil then
     vim.notify("Command isn't set", vim.log.levels.WARN)
-    return nil
-  end
-  cmd = cmd:match("^%s*(.-)%s*$") -- trim trailing whitepsaces
-  if cmd == nil or cmd == "" then
-    vim.notify("Can't parse command", vim.log.levels.WARN)
     return nil
   end
   return cmd
@@ -88,8 +76,8 @@ local function open_cmdwin()
   -- create cmd buffer
   if cmdbuf_id == nil or not vim.api.nvim_buf_is_valid(cmdbuf_id) then
     cmdbuf_id = vim.api.nvim_create_buf(false, true)
-    setup_cmdbuf()
   end
+  setup_cmdbuf()
 
   local lines = get_history()
   vim.api.nvim_buf_set_lines(cmdbuf_id, 0, -1, false, lines)
@@ -116,9 +104,11 @@ end
 -- ==================
 -- COMPILATION WINDOW
 -- ==================
+-- TODO: <Return>, gF, gf should jump not in comp window, but in one with a code
 local function setup_compbuf()
-  vim.api.nvim_set_option_value("modified", false, {scope="local", buf=comp_bufid})
+  vim.api.nvim_set_option_value("modified", false, {buf=compbuf_id})
 end
+
 -- Open a window and display the compilation window.
 -- If there is a compilation window open already, use
 -- that one. Otherwise, if the current window uses the
@@ -130,8 +120,8 @@ local function open_comp_window(focus)
   -- create terminal buffer
   if compbuf_id == nil or not vim.api.nvim_buf_is_valid(compbuf_id) then
     compbuf_id = vim.api.nvim_create_buf(false, true)
-    setup_compbuf()
   end
+  setup_compbuf()
 
   if compwin_id ~= nil and vim.api.nvim_win_is_valid(compwin_id) then
     vim.api.nvim_win_set_buf(compwin_id, compbuf_id)
@@ -141,12 +131,18 @@ local function open_comp_window(focus)
 
   local wins_with_buf = vim.fn.win_findbuf(compbuf_id)
   if vim.tbl_isempty(wins_with_buf) then
-    -- TODO: calculate layout
-    compwin_id = vim.api.nvim_open_win(compbuf_id, false, { split="right", win = -1, })
+     config = {}
+    if vim.api.nvim_win_get_width(0) > 80 then
+      config = {split="above", win=0,}
+    else
+      config = {split="above", win=-1,}
+    end
+    compwin_id = vim.api.nvim_open_win(compbuf_id, false, config)
   else
     compwin_id = wins_with_buf[0]
   end
-    vim.api.nvim_win_set_buf(compwin_id, compbuf_id)
+
+  vim.api.nvim_win_set_buf(compwin_id, compbuf_id)
   if focus then vim.api.nvim_set_current_win(compwin_id) end
 end
 
@@ -179,7 +175,6 @@ function M.run_cmd(cmd)
   vim.notify("Compile: " .. cmd, vim.log.levels.INFO)
   local save_current_win = vim.api.nvim_get_current_win()
   open_comp_window(true)
-  vim.api.nvim_set_option_value("modified", false, {buf=compbuf_id})
   jobid = vim.fn.jobstart("time " .. cmd, {
     pty = true,
     term = true,
@@ -211,7 +206,4 @@ function M.stop_cmd()
   vim.fn.jobstop(jobid)
     vim.notify("Job killed", vim.log.levels.WARN)
 end
-vim.keymap.set("n", "<leader>i",  M.toggle_cmdwin)
-vim.keymap.set("n", "<leader>o",  M.toggle_compwin)
--- vim.keymap.set("n", "<leader>r",  M.toggle_compwin)
 return M
