@@ -1,3 +1,4 @@
+-- TODO: If compile window in new tab it messed path path and swith to this tab
 -- TODO: update README and push to main
 local M =  {}
 
@@ -125,38 +126,16 @@ local function setup_compbuf()
     return nil
   end
 
-  local function edit_under_cursor()
-    local filename = vim.fn.expand("<cfile>")
-    if not vim.uv.fs_stat(filename) then
-      vim.notify([[Can't find file "]] .. name .. [[" in path]], vim.log.levels.ERROR)
-      return
-    end
-    local win = window_with_filename(filename)
-    if win ~= nil then
-      vim.api.nvim_set_current_win(win)
-    else
-      vim.cmd.wincmd("p")
-    end
-    vim.cmd.edit(vim.fn.fnameescape(filename))
-  end
-
   local function edit_under_cursor_with_pos()
     local filename = vim.fn.expand("<cfile>")
     if not vim.uv.fs_stat(filename) then
       vim.notify([[Can't find file "]] .. filename .. [[" in path]], vim.log.levels.ERROR)
       return
     end
-    local name_len = string.len(filename)
-    local cursor_col = vim.api.nvim_win_get_cursor(0)[1]
     local line = vim.api.nvim_get_current_line()
-
-    local index_start = string.find(line, filename)
-    while index_start + name_len < cursor_col do
-      index_start = string.find(line, filename, index_start + 1)
-    end
-    local linenum = string.match(line, "[%s,%D](%d+)", index_start)
+    local _, file_end_col = string.find(line, filename, 0, true)
+    linenum = string.match(line, "[%s,%D](%d+)", file_end_col)
     linenum = tonumber(linenum)
-
     local win = window_with_filename(filename)
     if win ~= nil then
       vim.api.nvim_set_current_win(win)
@@ -168,12 +147,14 @@ local function setup_compbuf()
       vim.api.nvim_win_set_cursor(0, { linenum, 0 })
       vim.cmd.normal { 'zz', bang = true }
     else
-      vim.notify("Line " .. linenum .. " outside the buffer", vim.log.levels.WARN)
+      if lienum ~= nil then
+        vim.notify("Line " .. linenum .. " outside the buffer", vim.log.levels.WARN)
+      end
     end
   end
 
   vim.api.nvim_set_option_value("modified", false, {buf=compbuf_id})
-  vim.keymap.set({"n", "t"}, "gf", function() edit_under_cursor() end, {buffer=compbuf_id})
+  vim.keymap.set({"n", "t"}, "gf", function() edit_under_cursor_with_pos() end, {buffer=compbuf_id})
   vim.keymap.set({"n", "t"}, "gF", function() edit_under_cursor_with_pos() end, {buffer=compbuf_id})
 end
 
@@ -227,11 +208,11 @@ end
 -- ==================
 -- RUN
 -- ==================
-function M.run_last_cmd()
-  M.run_cmd(get_last_cmd())
+function M.run_last_cmd(jump)
+  M.run_cmd(get_last_cmd(), jump)
 end
 
-function M.run_cmd(cmd)
+function M.run_cmd(cmd, jump)
   -- TODO: A way to run more then one command simultaneously
   if jobid ~= nil then
     vim.notify("Kill previous job" .. cmd, vim.log.levels.WARN)
@@ -259,10 +240,18 @@ function M.run_cmd(cmd)
     end,
     on_exit = function()
       jobid = nil
+      if jump == true then
+        if vim.api.nvim_win_is_valid(compwin_id) == false  then
+          open_cmdwin()
+        end
+        vim.api.nvim_win_set_cursor(compwin_id, {1, 0})
+      end
       vim.cmd.cgetbuffer(compbuf_id)
     end,
   })
-  vim.api.nvim_set_current_win(save_current_win)
+  if jump == false then
+    vim.api.nvim_set_current_win(save_current_win)
+  end
 end
 
 function M.stop_cmd()
