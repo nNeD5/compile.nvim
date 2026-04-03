@@ -143,11 +143,11 @@ local function setup_compbuf()
       vim.cmd.wincmd("p")
     end
     vim.cmd.edit(vim.fn.fnameescape(filename))
-    if linenum ~= nil and linenum > 0 and linenum < vim.api.nvim_buf_line_count(0) then
+    if linenum ~= nil and linenum > 0 and linenum <= vim.api.nvim_buf_line_count(0) then
       vim.api.nvim_win_set_cursor(0, { linenum, 0 })
       vim.cmd.normal { 'zz', bang = true }
     else
-      if lienum ~= nil then
+      if linenum ~= nil then
         vim.notify("Line " .. linenum .. " outside the buffer", vim.log.levels.WARN)
       end
     end
